@@ -54,7 +54,9 @@ export default {
       curSubLevel: 0,
       doBothSubLevels: false,
       flipHorizontally: false,
+      fh: false, // Tracking flipping horizontally as done by random separately
       flipVertically: false,
+      fv: false, // Tracking flipping vertically as done by random separately
       flipRandomly: false,
       map: [],
       playerPosition: [-1, -1],
@@ -93,16 +95,14 @@ export default {
     },
     loadMap () {
       this.map = maps[this.curLevel][this.curSubLevel].slice();
-      let fh = this.flipHorizontally;
-      let fv = this.flipVertically;
       if (this.flipRandomly) {
-        fh = Math.random() < 0.5;
-        fv = Math.random() < 0.5;
+        this.fh = Math.random() < 0.5;
+        this.fv = Math.random() < 0.5;
       }
-      if (fh) {
+      if (this.fh) {
         this.map = this.map.map((row) => row.split('').reverse().join(''));
       }
-      if (fv) {
+      if (this.fv) {
         this.map = this.map.reverse()
       }
       this.playerPosition = this.getPlayerPosition(this.map);
@@ -175,6 +175,16 @@ export default {
       }
       return false
     },
+    getFlippedBaseMap() {
+      let m = maps[this.curLevel][this.curSubLevel].slice()
+      if (this.fh || this.flipHorizontally) {
+        m = m.map((row) => row.split('').reverse().join(''));
+      }
+      if (this.fv || this.flipVertically) {
+        m = m.reverse();
+      }
+      return m;
+    },
     tryPushBoulder (x, y, dx, dy) {
       // can't push boulders diagonal
       if (dx !== 0 && dy !== 0) return false;
@@ -189,12 +199,12 @@ export default {
         return false;
       }
       // Replace boulder's previous position with the initial map tile or floor
-      const prevPosition = this.charAt(maps[this.curLevel][this.curSubLevel], x, y);
+      const prevPosition = this.charAt(this.getFlippedBaseMap(), x, y);
       if (prevPosition === '0' || prevPosition === '.' || prevPosition === '^') {
         this.map[y] = this.map[y].substr(0, x) + '.' + this.map[y].substr(x + 1);
       } else {
         // This prevents stairs from being deleted when a boulder is moved on them
-        this.map[y] = this.map[y].substr(0, x) + this.charAt(maps[this.curLevel][this.curSubLevel], x, y) + this.map[y].substr(x + 1);
+        this.map[y] = this.map[y].substr(0, x) + this.charAt(this.getFlippedBaseMap(), x, y) + this.map[y].substr(x + 1);
       }
       return true;
     }
@@ -204,12 +214,14 @@ export default {
       if (val) {
         this.flipRandomly = false;
       }
+      this.fv = val;
       this.loadMap();
     },
     flipHorizontally: function (val) {
       if (val) {
         this.flipRandomly = false;
       }
+      this.fh = val;
       this.loadMap();
     },
     flipRandomly: function (val) {
