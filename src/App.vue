@@ -50,7 +50,7 @@ export default {
   data () {
     return {
       moveTo: false,
-      pushTo: false,
+      pushBoulder: false,
       mapString: '',
       curLevel: 0,
       curSubLevel: 0,
@@ -121,35 +121,37 @@ export default {
     charAt (map, x, y) {
       return map[y].charAt(x);
     },
+    getMoveTo(evt) {
+      return (evt.getModifierState('Control') || evt.getModifierState('Shift') || this.moveTo);
+    },
+    getPushTo(evt) {
+      return evt.getModifierState('Shift');
+    },
     keyboardEvent (evt) {
-      if (evt.getModifierState('Control')) this.moveTo = true;
-      if (evt.getModifierState('Shift')) {
-        this.moveTo = true;
-        this.pushTo = true;
-      }
       if (evt.code === 'KeyM' || evt.code === 'KeyG') this.moveTo = true;
-      if (evt.code === 'KeyJ' || evt.code === 'Numpad2' || evt.code === 'ArrowDown') this.move(0, 1);
-      if (evt.code === 'KeyK' || evt.code === 'Numpad8' || evt.code === 'ArrowUp') this.move(0, -1);
-      if (evt.code === 'KeyH' || evt.code === 'Numpad4' || evt.code === 'ArrowLeft') this.move(-1, 0);
-      if (evt.code === 'KeyL' || evt.code === 'Numpad6' || evt.code === 'ArrowRight') this.move(1, 0);
-      if (evt.code === 'KeyY' || evt.code === 'Numpad7') this.move(-1, -1);
-      if (evt.code === 'KeyU' || evt.code === 'Numpad9') this.move(1, -1);
-      if (evt.code === 'KeyB' || evt.code === 'Numpad1') this.move(-1, 1);
-      if (evt.code === 'KeyN' || evt.code === 'Numpad3') this.move(1, 1);
+      if (evt.code === 'KeyJ' || evt.code === 'Numpad2' || evt.code === 'ArrowDown') this.move(0, 1, this.getMoveTo(evt), this.getPushTo(evt));
+      if (evt.code === 'KeyK' || evt.code === 'Numpad8' || evt.code === 'ArrowUp') this.move(0, -1, this.getMoveTo(evt), this.getPushTo(evt));
+      if (evt.code === 'KeyH' || evt.code === 'Numpad4' || evt.code === 'ArrowLeft') this.move(-1, 0, this.getMoveTo(evt), this.getPushTo(evt));
+      if (evt.code === 'KeyL' || evt.code === 'Numpad6' || evt.code === 'ArrowRight') this.move(1, 0, this.getMoveTo(evt), this.getPushTo(evt));
+      if (evt.code === 'KeyY' || evt.code === 'Numpad7') this.move(-1, -1, this.getMoveTo(evt), this.getPushTo(evt));
+      if (evt.code === 'KeyU' || evt.code === 'Numpad9') this.move(1, -1, this.getMoveTo(evt), this.getPushTo(evt));
+      if (evt.code === 'KeyB' || evt.code === 'Numpad1') this.move(-1, 1, this.getMoveTo(evt), this.getPushTo(evt));
+      if (evt.code === 'KeyN' || evt.code === 'Numpad3') this.move(1, 1, this.getMoveTo(evt), this.getPushTo(evt));
       if (evt.code === 'KeyR') this.loadMap();
     },
-    move (x, y) {
-      if (this.canMoveTo(this.playerPosition[0] + x, this.playerPosition[1] + y, x, y, false)) {
+    move (x, y, moveTo, pushBoulder) {
+      this.pushBoulder = pushBoulder;
+      this.moveTo = moveTo;
+      if (this.canMoveTo(this.playerPosition[0] + x, this.playerPosition[1] + y, x, y)) {
         this.playerPosition[0] += x;
         this.playerPosition[1] += y;
         this.updateMapString();
-        if (this.moveTo) {
+        if (moveTo) {
           // repeat same move while possible
-          this.move(x,y);
+          this.move(x,y, this.moveTo, this.pushBoulder);
         }
       } else {
         this.moveTo = false;
-        this.pushTo = false;
       }
     },
     isPassable(x, y) {
@@ -185,7 +187,7 @@ export default {
         } else {
           return true
         }
-      } else if (movingTo === '0' && (!this.moveTo || this.pushTo)) {
+      } else if (movingTo === '0' && (this.pushBoulder || !this.moveTo)) {
         return this.tryPushBoulder(x, y, dx, dy)
       }
       return false
@@ -202,7 +204,7 @@ export default {
     },
     tryPushBoulder (x, y, dx, dy) {
       // Only push boulders once with shift movement
-      this.pushTo = false;
+      this.pushBoulder = false;
       // can't push boulders diagonal
       if (dx !== 0 && dy !== 0) return false;
       const pushingTo = this.charAt(this.map, x + dx, y + dy);
