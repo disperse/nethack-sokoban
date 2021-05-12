@@ -38,10 +38,10 @@ export default {
     Map
   },
   created () {
-    window.addEventListener('keypress', this.keyboardEvent);
+    window.addEventListener('keydown', this.keyboardEvent);
   },
   destroyed () {
-    window.removeEventListener('keypress', this.keyboardEvent);
+    window.removeEventListener('keydown', this.keyboardEvent);
   },
   mounted () {
     this.curSubLevel = (this.doBothSubLevels) ? 0 : Math.floor(Math.random() * maps[this.curLevel].length)
@@ -49,6 +49,8 @@ export default {
   },
   data () {
     return {
+      moveTo: false,
+      pushTo: false,
       mapString: '',
       curLevel: 0,
       curSubLevel: 0,
@@ -120,10 +122,16 @@ export default {
       return map[y].charAt(x);
     },
     keyboardEvent (evt) {
-      if (evt.code === 'KeyJ' || evt.code === 'Numpad2') this.move(0, 1);
-      if (evt.code === 'KeyK' || evt.code === 'Numpad8') this.move(0, -1);
-      if (evt.code === 'KeyH' || evt.code === 'Numpad4') this.move(-1, 0);
-      if (evt.code === 'KeyL' || evt.code === 'Numpad6') this.move(1, 0);
+      if (evt.getModifierState('Control')) this.moveTo = true;
+      if (evt.getModifierState('Shift')) {
+        this.moveTo = true;
+        this.pushTo = true;
+      }
+      if (evt.code === 'KeyM' || evt.code === 'KeyG') this.moveTo = true;
+      if (evt.code === 'KeyJ' || evt.code === 'Numpad2' || evt.code === 'ArrowDown') this.move(0, 1);
+      if (evt.code === 'KeyK' || evt.code === 'Numpad8' || evt.code === 'ArrowUp') this.move(0, -1);
+      if (evt.code === 'KeyH' || evt.code === 'Numpad4' || evt.code === 'ArrowLeft') this.move(-1, 0);
+      if (evt.code === 'KeyL' || evt.code === 'Numpad6' || evt.code === 'ArrowRight') this.move(1, 0);
       if (evt.code === 'KeyY' || evt.code === 'Numpad7') this.move(-1, -1);
       if (evt.code === 'KeyU' || evt.code === 'Numpad9') this.move(1, -1);
       if (evt.code === 'KeyB' || evt.code === 'Numpad1') this.move(-1, 1);
@@ -135,6 +143,13 @@ export default {
         this.playerPosition[0] += x;
         this.playerPosition[1] += y;
         this.updateMapString();
+        if (this.moveTo) {
+          // repeat same move while possible
+          this.move(x,y);
+        }
+      } else {
+        this.moveTo = false;
+        this.pushTo = false;
       }
     },
     isPassable(x, y) {
@@ -170,7 +185,7 @@ export default {
         } else {
           return true
         }
-      } else if (movingTo === '0') {
+      } else if (movingTo === '0' && (!this.moveTo || this.pushTo)) {
         return this.tryPushBoulder(x, y, dx, dy)
       }
       return false
@@ -186,6 +201,8 @@ export default {
       return m;
     },
     tryPushBoulder (x, y, dx, dy) {
+      // Only push boulders once with shift movement
+      this.pushTo = false;
       // can't push boulders diagonal
       if (dx !== 0 && dy !== 0) return false;
       const pushingTo = this.charAt(this.map, x + dx, y + dy);
