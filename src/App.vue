@@ -6,7 +6,12 @@
     <h1 v-if="won">YOU WIN!</h1>
     <div>
       <h3>Options</h3>
-      <input type="checkbox" v-model="doBothSubLevels" id="doBothSubLevels"><label for="doBothSubLevels">Do both sub-levels</label>
+      <div>
+        <input type="checkbox" v-model="doBothSubLevels" id="doBothSubLevels"><label for="doBothSubLevels">Do both sub-levels</label>
+      </div>
+      <div>
+        <input type="checkbox" v-model="flipLevels" id="flipLevels"><label for="flipLevels">Flip levels</label>
+      </div>
     </div>
     <div>
       <h3>Levels</h3>
@@ -42,7 +47,7 @@ export default {
       curLevel: 0,
       curSubLevel: 0,
       doBothSubLevels: false,
-      flipLevels: false, // TODO
+      flipLevels: false,
       map: [],
       playerPosition: [-1, -1],
       won: false
@@ -80,6 +85,9 @@ export default {
     },
     loadMap () {
       this.map = maps[this.curLevel][this.curSubLevel].slice();
+      if (this.flipLevels) {
+        this.map = this.map.map((row) => row.split('').reverse().join(''));
+      }
       this.playerPosition = this.getPlayerPosition(this.map);
       this.updateMapString();
     },
@@ -175,6 +183,9 @@ export default {
     }
   },
   watch: {
+    flipLevels: function () {
+      this.loadMap();
+    },
     doBothSubLevels: function (val) {
       if (val && this.curSubLevel > 0) {
         this.curSubLevel = 0;
