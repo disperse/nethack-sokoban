@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <h1 v-if="!won">Sokoban level {{ (this.curLevel + 1) + ((this.curSubLevel === 0) ? 'a' : 'b')}}</h1>
+    <h1 v-if="!won">Sokoban Level {{ (this.curLevel + 1) + ((this.curSubLevel === 0) ? 'a' : 'b')}}</h1>
     <Map v-if="!won" :map-string="mapString" :player-position="playerPosition"/>
     <h3 v-if="!won">Push R to restart.</h3>
     <h1 v-if="won">YOU WIN!</h1>
@@ -24,6 +24,10 @@
       <ul>
         <li v-for="level in levelListing" v-bind:key="level.name"><a href="#" @click="changeLevel(level)">{{level.name}}</a></li>
       </ul>
+    </div>
+    <div>
+      <h3>More info</h3>
+      <p>Source code available at <a href="https://github.com/disperse/nethack-sokoban">https://github.com/disperse/nethack-sokoban</a>. Report issues or request new features there.</p>
     </div>
   </div>
 </template>
@@ -262,4 +266,12 @@ export default {
 </script>
 
 <style>
+html {
+  font-family: 'Menlo', monospace;
+  color: white;
+  background-color: black;
+}
+a {
+  color: white;
+}
 </style>
