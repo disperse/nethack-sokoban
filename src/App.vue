@@ -128,16 +128,17 @@ export default {
       return evt.getModifierState('Shift');
     },
     keyboardEvent (evt) {
-      if (evt.code === 'KeyM' || evt.code === 'KeyG') this.moveTo = true;
-      if (evt.code === 'KeyJ' || evt.code === 'Numpad2' || evt.code === 'ArrowDown') this.move(0, 1, this.getMoveTo(evt), this.getPushTo(evt));
-      if (evt.code === 'KeyK' || evt.code === 'Numpad8' || evt.code === 'ArrowUp') this.move(0, -1, this.getMoveTo(evt), this.getPushTo(evt));
-      if (evt.code === 'KeyH' || evt.code === 'Numpad4' || evt.code === 'ArrowLeft') this.move(-1, 0, this.getMoveTo(evt), this.getPushTo(evt));
-      if (evt.code === 'KeyL' || evt.code === 'Numpad6' || evt.code === 'ArrowRight') this.move(1, 0, this.getMoveTo(evt), this.getPushTo(evt));
-      if (evt.code === 'KeyY' || evt.code === 'Numpad7') this.move(-1, -1, this.getMoveTo(evt), this.getPushTo(evt));
-      if (evt.code === 'KeyU' || evt.code === 'Numpad9') this.move(1, -1, this.getMoveTo(evt), this.getPushTo(evt));
-      if (evt.code === 'KeyB' || evt.code === 'Numpad1') this.move(-1, 1, this.getMoveTo(evt), this.getPushTo(evt));
-      if (evt.code === 'KeyN' || evt.code === 'Numpad3') this.move(1, 1, this.getMoveTo(evt), this.getPushTo(evt));
-      if (evt.code === 'KeyR') this.loadMap();
+      console.log('evt', evt);
+      if (evt.key === 'm' || evt.key === 'g') this.moveTo = true;
+      if (evt.key === 'j' || evt.key === '2' || evt.key === 'ArrowDown') this.move(0, 1, this.getMoveTo(evt), this.getPushTo(evt));
+      if (evt.key === 'k' || evt.key === '8' || evt.key === 'ArrowUp') this.move(0, -1, this.getMoveTo(evt), this.getPushTo(evt));
+      if (evt.key === 'h' || evt.key === '4' || evt.key === 'ArrowLeft') this.move(-1, 0, this.getMoveTo(evt), this.getPushTo(evt));
+      if (evt.key === 'l' || evt.key === '6' || evt.key === 'ArrowRight') this.move(1, 0, this.getMoveTo(evt), this.getPushTo(evt));
+      if (evt.key === 'y' || evt.key === '7') this.move(-1, -1, this.getMoveTo(evt), this.getPushTo(evt));
+      if (evt.key === 'u' || evt.key === '9') this.move(1, -1, this.getMoveTo(evt), this.getPushTo(evt));
+      if (evt.key === 'b' || evt.key === '1') this.move(-1, 1, this.getMoveTo(evt), this.getPushTo(evt));
+      if (evt.key === 'n' || evt.key === '3') this.move(1, 1, this.getMoveTo(evt), this.getPushTo(evt));
+      if (evt.key === 'r') this.loadMap();
     },
     move (x, y, moveTo, pushBoulder) {
       this.pushBoulder = pushBoulder;
