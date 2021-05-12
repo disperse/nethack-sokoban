@@ -2,6 +2,7 @@
   <div id="app">
     <h1 v-if="!won">Sokoban level {{ (this.curLevel + 1) + ((this.curSubLevel === 0) ? 'a' : 'b')}}</h1>
     <Map v-if="!won" :map-string="mapString" :player-position="playerPosition"/>
+    <h3 v-if="!won">Push R to restart.</h3>
     <h1 v-if="won">YOU WIN!</h1>
     <div>
       <h3>Options</h3>
@@ -78,7 +79,7 @@ export default {
       this.mapString = mapString;
     },
     loadMap () {
-      this.map = maps[this.curLevel][this.curSubLevel];
+      this.map = maps[this.curLevel][this.curSubLevel].slice();
       this.playerPosition = this.getPlayerPosition(this.map);
       this.updateMapString();
     },
@@ -102,6 +103,7 @@ export default {
       if (evt.code === 'KeyU' || evt.code === 'Numpad9') this.move(1, -1);
       if (evt.code === 'KeyB' || evt.code === 'Numpad1') this.move(-1, 1);
       if (evt.code === 'KeyN' || evt.code === 'Numpad3') this.move(1, 1);
+      if (evt.code === 'KeyR') this.loadMap();
     },
     move (x, y) {
       if (this.canMoveTo(this.playerPosition[0] + x, this.playerPosition[1] + y, x, y, false)) {
@@ -110,10 +112,21 @@ export default {
         this.updateMapString();
       }
     },
+    isPassable(x, y) {
+      const movingTo = this.charAt(this.map, x, y);
+      return (movingTo === '.' || movingTo === '<' || movingTo === '>' || movingTo === '+');
+    },
     canMoveTo (x, y, dx, dy) {
-      switch (this.charAt(this.map, x, y)) {
-        case '.' : return true
-        case '<' :
+      const movingTo = this.charAt(this.map, x, y)
+      // Prevent squeezing through
+      if (dx !== 0 && dy !== 0) {
+        // if moving diagonal
+        if (!this.isPassable((x - dx), y) && !this.isPassable(x, (y - dy))) {
+          return false
+        }
+      }
+      if (this.isPassable(x, y)) {
+        if (movingTo === '<') {
           if (this.curLevel === maps.length - 1 && (!this.doBothSubLevels || this.curSubLevel === maps[this.curLevel].length - 1)) {
             this.won = true;
           } else {
@@ -129,10 +142,13 @@ export default {
             this.loadMap();
           }
           return false
-        case '>' : return true
-        case '0' : return this.tryPushBoulder(x, y, dx, dy)
-        default : return false
+        } else {
+          return true
+        }
+      } else if (movingTo === '0') {
+        return this.tryPushBoulder(x, y, dx, dy)
       }
+      return false
     },
     tryPushBoulder (x, y, dx, dy) {
       // can't push boulders diagonal
@@ -148,8 +164,13 @@ export default {
         return false;
       }
       // Replace boulder's previous position with the initial map tile or floor
-      const replaceWith = (this.charAt(maps[this.curLevel][this.curSubLevel], x, y) === '0' || this.charAt(maps[this.curLevel][this.curSubLevel], x, y) === '.') ? '.' : this.charAt(maps[this.curLevel][this.curSubLevel], x, y);
-      this.map[y] = this.map[y].substr(0, x) + replaceWith + this.map[y].substr(x + 1);
+      const prevPosition = this.charAt(maps[this.curLevel][this.curSubLevel], x, y);
+      if (prevPosition === '0' || prevPosition === '.' || prevPosition === '^') {
+        this.map[y] = this.map[y].substr(0, x) + '.' + this.map[y].substr(x + 1);
+      } else {
+        // This prevents stairs from being deleted when a boulder is moved on them
+        this.map[y] = this.map[y].substr(0, x) + this.charAt(maps[this.curLevel][this.curSubLevel], x, y) + this.map[y].substr(x + 1);
+      }
       return true;
     }
   },
