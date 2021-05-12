@@ -10,7 +10,13 @@
         <input type="checkbox" v-model="doBothSubLevels" id="doBothSubLevels"><label for="doBothSubLevels">Do both sub-levels</label>
       </div>
       <div>
-        <input type="checkbox" v-model="flipLevels" id="flipLevels"><label for="flipLevels">Flip levels</label>
+        <input type="checkbox" v-model="flipHorizontally" id="flipHorizontally"><label for="flipHorizontally">Flip levels horizontally</label>
+      </div>
+      <div>
+        <input type="checkbox" v-model="flipVertically" id="flipVertically"><label for="flipVertically">Flip levels vertically</label>
+      </div>
+      <div>
+        <input type="checkbox" v-model="flipRandomly" id="flipRandomly"><label for="flipRandomly">Flip levels randomly</label>
       </div>
     </div>
     <div>
@@ -47,7 +53,9 @@ export default {
       curLevel: 0,
       curSubLevel: 0,
       doBothSubLevels: false,
-      flipLevels: false,
+      flipHorizontally: false,
+      flipVertically: false,
+      flipRandomly: false,
       map: [],
       playerPosition: [-1, -1],
       won: false
@@ -85,8 +93,17 @@ export default {
     },
     loadMap () {
       this.map = maps[this.curLevel][this.curSubLevel].slice();
-      if (this.flipLevels) {
+      let fh = this.flipHorizontally;
+      let fv = this.flipVertically;
+      if (this.flipRandomly) {
+        fh = Math.random() < 0.5;
+        fv = Math.random() < 0.5;
+      }
+      if (fh) {
         this.map = this.map.map((row) => row.split('').reverse().join(''));
+      }
+      if (fv) {
+        this.map = this.map.reverse()
       }
       this.playerPosition = this.getPlayerPosition(this.map);
       this.updateMapString();
@@ -183,7 +200,23 @@ export default {
     }
   },
   watch: {
-    flipLevels: function () {
+    flipVertically: function (val) {
+      if (val) {
+        this.flipRandomly = false;
+      }
+      this.loadMap();
+    },
+    flipHorizontally: function (val) {
+      if (val) {
+        this.flipRandomly = false;
+      }
+      this.loadMap();
+    },
+    flipRandomly: function (val) {
+      if (val) {
+        this.flipVertically = false;
+        this.flipHorizontally = false;
+      }
       this.loadMap();
     },
     doBothSubLevels: function (val) {
