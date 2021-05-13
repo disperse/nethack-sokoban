@@ -2,7 +2,7 @@
   <div id="app" :class="{'invert':invert}">
     <h1 v-if="!won">Sokoban Level {{ (this.curLevel + 1) + ((this.curSubLevel === 0) ? 'a' : 'b')}}</h1>
     <Map v-if="!won" :map-string="mapString" :player-position="playerPosition" :invert="invert"/>
-    <h3 v-if="!won">Push R to restart.</h3>
+    <h3>Push R to restart.</h3>
     <h1 v-if="won">YOU WIN!</h1>
     <div class="inline">
       <h3>Options</h3>
@@ -184,6 +184,7 @@ export default {
         if (movingTo === '<') {
           if (this.curLevel === maps.length - 1 && (!this.doBothSubLevels || this.curSubLevel === maps[this.curLevel].length - 1)) {
             this.won = true;
+            this.curLevel = 1;
           } else {
             if (this.doBothSubLevels) {
               if (this.curSubLevel === maps[this.curLevel].length - 1) {
