@@ -1,10 +1,10 @@
 <template>
-  <div id="app">
+  <div id="app" :class="{'invert':invert}">
     <h1 v-if="!won">Sokoban Level {{ (this.curLevel + 1) + ((this.curSubLevel === 0) ? 'a' : 'b')}}</h1>
-    <Map v-if="!won" :map-string="mapString" :player-position="playerPosition"/>
+    <Map v-if="!won" :map-string="mapString" :player-position="playerPosition" :invert="invert"/>
     <h3 v-if="!won">Push R to restart.</h3>
     <h1 v-if="won">YOU WIN!</h1>
-    <div>
+    <div class="inline">
       <h3>Options</h3>
       <div>
         <input type="checkbox" v-model="doBothSubLevels" id="doBothSubLevels"><label for="doBothSubLevels">Do both sub-levels</label>
@@ -18,8 +18,11 @@
       <div>
         <input type="checkbox" v-model="flipRandomly" id="flipRandomly"><label for="flipRandomly">Flip levels randomly</label>
       </div>
+      <div>
+        <input type="checkbox" v-model="invert" id="invert"><label for="invert">Invert colors</label>
+      </div>
     </div>
-    <div>
+    <div class="inline">
       <h3>Levels</h3>
       <ul>
         <li v-for="level in levelListing" v-bind:key="level.name"><a href="#" @click="changeLevel(level)">{{level.name}}</a></li>
@@ -66,7 +69,8 @@ export default {
       flipRandomly: false,
       map: [],
       playerPosition: [-1, -1],
-      won: false
+      won: false,
+      invert: false
     }
   },
   computed: {
@@ -100,6 +104,8 @@ export default {
       this.mapString = mapString;
     },
     loadMap () {
+      // reset win state
+      this.won = false;
       this.map = maps[this.curLevel][this.curSubLevel].slice();
       if (this.flipRandomly) {
         this.fh = Math.random() < 0.5;
@@ -132,7 +138,9 @@ export default {
       return evt.getModifierState('Shift');
     },
     keyboardEvent (evt) {
-      console.log('evt', evt);
+      // console.log('evt', evt);
+      // Prevent window from scrolling when using the arrow keys
+      if (evt.key === 'ArrowDown' || evt.key === 'ArrowUp' || evt.key === 'ArrowLeft' ||evt.key === 'ArrowRight') evt.preventDefault();
       if (evt.key === 'm' || evt.key === 'g') this.moveTo = true;
       if (evt.key === 'j' || evt.key === '2' || evt.key === 'ArrowDown') this.move(0, 1, this.getMoveTo(evt), this.getPushTo(evt));
       if (evt.key === 'k' || evt.key === '8' || evt.key === 'ArrowUp') this.move(0, -1, this.getMoveTo(evt), this.getPushTo(evt));
@@ -266,12 +274,36 @@ export default {
 </script>
 
 <style>
-html {
+html, body {
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+#app {
+  margin: 0;
+  padding: 2em;
   font-family: 'Menlo', monospace;
   color: white;
   background-color: black;
+  height: 100vh;
+  overflow: scroll;
 }
+
+#app.invert {
+  color: black;
+  background-color: white
+}
+
 a {
   color: white;
+}
+
+.inline {
+  display: inline-block;
+}
+
+#app.invert a {
+  color: black;
 }
 </style>

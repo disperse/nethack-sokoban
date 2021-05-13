@@ -1,12 +1,13 @@
 <template>
-  <div class="map">{{ mapString }}</div>
+  <div class="map" :class="{'invert':invert}">{{ mapString }}</div>
 </template>
 
 <script>
 export default {
   name: 'Map',
   props: {
-    mapString: String
+    mapString: String,
+    invert: Boolean
   },
   computed: {
   }
@@ -23,5 +24,9 @@ export default {
   white-space: pre;
   color: white;
   background-color: black;
+}
+.map.invert {
+  color: black;
+  background-color: white;
 }
 </style>
