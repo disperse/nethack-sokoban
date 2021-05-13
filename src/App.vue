@@ -4,29 +4,45 @@
     <Map v-if="!won" :map-string="mapString" :player-position="playerPosition" :invert="invert"/>
     <h3>Push R to restart.</h3>
     <h1 v-if="won">YOU WIN!</h1>
-    <div class="inline">
-      <h3>Options</h3>
-      <div>
-        <input type="checkbox" v-model="doBothSubLevels" id="doBothSubLevels"><label for="doBothSubLevels">Do both sub-levels</label>
+    <div>
+      <div v-if="trackTurnsLocally" class="inline">
+        <h3>Scores</h3>
+        <div>
+          <ul>
+            <li>Turns: {{ curTurns }}</li>
+            <li>Best turns: {{ (bestTurns[curLevel][curSubLevel] === Number.MAX_SAFE_INTEGER) ? 'None' : bestTurns[curLevel][curSubLevel] }}</li>
+            <li>Time: {{ timeElapsed }}s</li>
+            <li>Best time: {{ (bestTime[curLevel][curSubLevel] === Number.MAX_SAFE_INTEGER) ? 'None' : bestTime[curLevel][curSubLevel] + 's' }}</li>
+          </ul>
+        </div>
       </div>
-      <div>
-        <input type="checkbox" v-model="flipHorizontally" id="flipHorizontally"><label for="flipHorizontally">Flip levels horizontally</label>
+      <div class="inline">
+        <h3>Options</h3>
+        <div>
+          <input type="checkbox" v-model="doBothSubLevels" id="doBothSubLevels"><label for="doBothSubLevels">Do both sub-levels</label>
+        </div>
+        <div>
+          <input type="checkbox" v-model="flipHorizontally" id="flipHorizontally"><label for="flipHorizontally">Flip levels horizontally</label>
+        </div>
+        <div>
+          <input type="checkbox" v-model="flipVertically" id="flipVertically"><label for="flipVertically">Flip levels vertically</label>
+        </div>
+        <div>
+          <input type="checkbox" v-model="flipRandomly" id="flipRandomly"><label for="flipRandomly">Flip levels randomly</label>
+        </div>
+        <div>
+          <input type="checkbox" v-model="invert" id="invert"><label for="invert">Invert colors</label>
+        </div>
+        <div>
+          <input type="checkbox" v-model="trackTurnsLocally" id="trackTurnsLocally"><label for="trackTurnsLocally">Track score locally</label>
+        </div>
       </div>
-      <div>
-        <input type="checkbox" v-model="flipVertically" id="flipVertically"><label for="flipVertically">Flip levels vertically</label>
+      <div class="inline">
+        <h3>Levels</h3>
+        <ul>
+          <li v-for="level in levelListing" v-bind:key="level.name"><a href="#" @click="changeLevel(level)">{{level.name}}</a></li>
+        </ul>
       </div>
-      <div>
-        <input type="checkbox" v-model="flipRandomly" id="flipRandomly"><label for="flipRandomly">Flip levels randomly</label>
-      </div>
-      <div>
-        <input type="checkbox" v-model="invert" id="invert"><label for="invert">Invert colors</label>
-      </div>
-    </div>
-    <div class="inline">
-      <h3>Levels</h3>
-      <ul>
-        <li v-for="level in levelListing" v-bind:key="level.name"><a href="#" @click="changeLevel(level)">{{level.name}}</a></li>
-      </ul>
     </div>
     <div>
       <h3>More info</h3>
@@ -57,6 +73,12 @@ export default {
   },
   data () {
     return {
+      curTurns: 0,
+      bestTurns: [[Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER], [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER], [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER], [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER]],
+      bestTime: [[Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER], [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER], [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER], [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER]],
+      timerInterval: null,
+      timeStarted: 0,
+      timeElapsed: 0,
       moveTo: false,
       pushBoulder: false,
       mapString: '',
@@ -71,7 +93,8 @@ export default {
       map: [],
       playerPosition: [-1, -1],
       won: false,
-      invert: false
+      invert: false,
+      trackTurnsLocally: false
     }
   },
   computed: {
@@ -106,6 +129,15 @@ export default {
       if (localStorage.getItem('invert') !== null) {
         this.invert = (localStorage.getItem('invert') === 'true');
       }
+      if (localStorage.getItem('trackTurnsLocally') !== null) {
+        this.trackTurnsLocally = (localStorage.getItem('trackTurnsLocally') === 'true');
+      }
+      if (localStorage.getItem('bestTurns') !== null) {
+        this.bestTurns = JSON.parse(localStorage.getItem('bestTurns'));
+      }
+      if (localStorage.getItem('bestTime') !== null) {
+        this.bestTime = JSON.parse(localStorage.getItem('bestTime'));
+      }
     },
     changeLevel (levelObject) {
       this.curLevel = levelObject.level;
@@ -122,6 +154,11 @@ export default {
       this.mapString = mapString;
     },
     loadMap () {
+      // reset timer
+      clearInterval(this.timerInterval);
+      this.timerInterval = setInterval(() => this.timeElapsed = Math.round((Date.now() - this.timeStarted) / 1000), 1000);
+      this.curTurns = 0;
+      this.timeStarted = Date.now();
       // reset win state
       this.won = false;
       this.map = maps[this.curLevel][this.curSubLevel].slice();
@@ -174,6 +211,7 @@ export default {
       this.pushBoulder = pushBoulder;
       this.moveTo = moveTo;
       if (this.canMoveTo(this.playerPosition[0] + x, this.playerPosition[1] + y, x, y)) {
+        this.curTurns++;
         this.playerPosition[0] += x;
         this.playerPosition[1] += y;
         this.updateMapString();
@@ -200,6 +238,12 @@ export default {
       }
       if (this.isPassable(x, y)) {
         if (movingTo === '<') {
+          this.bestTurns[this.curLevel][this.curSubLevel] = Math.min(this.bestTurns[this.curLevel][this.curSubLevel], this.curTurns);
+          localStorage.setItem('bestTurns', JSON.stringify(this.bestTurns));
+
+          this.bestTime[this.curLevel][this.curSubLevel] = Math.min(this.bestTime[this.curLevel][this.curSubLevel], this.timeElapsed);
+          localStorage.setItem('bestTime', JSON.stringify(this.bestTime));
+
           if (this.curLevel === maps.length - 1 && (!this.doBothSubLevels || this.curSubLevel === maps[this.curLevel].length - 1)) {
             this.won = true;
             this.curLevel = 1;
@@ -208,6 +252,8 @@ export default {
               if (this.curSubLevel === maps[this.curLevel].length - 1) {
                 this.curLevel++;
                 this.curSubLevel = 0;
+              } else {
+                this.curSubLevel++;
               }
             } else {
               this.curLevel++;
@@ -294,6 +340,9 @@ export default {
     },
     invert: function (val) {
       localStorage.setItem('invert', val);
+    },
+    trackTurnsLocally: function (val) {
+      localStorage.setItem('trackTurnsLocally', val);
     }
   }
 }
@@ -328,6 +377,9 @@ a {
 
 .inline {
   display: inline-block;
+  height: 100%;
+  vertical-align: top;
+  margin-right: 1.5em;
 }
 
 #app.invert a {
