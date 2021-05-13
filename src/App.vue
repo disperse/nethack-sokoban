@@ -51,6 +51,7 @@ export default {
     window.removeEventListener('keydown', this.keyboardEvent);
   },
   mounted () {
+    this.loadOptions();
     this.curSubLevel = (this.doBothSubLevels) ? 0 : Math.floor(Math.random() * maps[this.curLevel].length)
     this.loadMap();
   },
@@ -89,6 +90,23 @@ export default {
     }
   },
   methods: {
+    loadOptions () {
+      if (localStorage.getItem('doBothSubLevels') !== null) {
+        this.doBothSubLevels = (localStorage.getItem('doBothSubLevels') === 'true');
+      }
+      if (localStorage.getItem('flipHorizontally') !== null) {
+        this.flipHorizontally = (localStorage.getItem('flipHorizontally') === 'true');
+      }
+      if (localStorage.getItem('flipVertically') !== null) {
+        this.flipVertically = (localStorage.getItem('flipVertically') === 'true');
+      }
+      if (localStorage.getItem('flipRandomly') !== null) {
+        this.flipRandomly = (localStorage.getItem('flipRandomly') === 'true');
+      }
+      if (localStorage.getItem('invert') !== null) {
+        this.invert = (localStorage.getItem('invert') === 'true');
+      }
+    },
     changeLevel (levelObject) {
       this.curLevel = levelObject.level;
       this.curSubLevel = levelObject.subLevel;
@@ -244,6 +262,7 @@ export default {
   },
   watch: {
     flipVertically: function (val) {
+      localStorage.setItem('flipVertically', val);
       if (val) {
         this.flipRandomly = false;
       }
@@ -251,6 +270,7 @@ export default {
       this.loadMap();
     },
     flipHorizontally: function (val) {
+      localStorage.setItem('flipHorizontally', val);
       if (val) {
         this.flipRandomly = false;
       }
@@ -258,6 +278,7 @@ export default {
       this.loadMap();
     },
     flipRandomly: function (val) {
+      localStorage.setItem('flipRandomly', val);
       if (val) {
         this.flipVertically = false;
         this.flipHorizontally = false;
@@ -265,10 +286,14 @@ export default {
       this.loadMap();
     },
     doBothSubLevels: function (val) {
+      localStorage.setItem('doBothSubLevels', val);
       if (val && this.curSubLevel > 0) {
         this.curSubLevel = 0;
         this.loadMap();
       }
+    },
+    invert: function (val) {
+      localStorage.setItem('invert', val);
     }
   }
 }
