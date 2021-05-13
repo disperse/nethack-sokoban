@@ -289,6 +289,7 @@ html, body {
   background-color: black;
   height: 100vh;
   overflow: scroll;
+  box-sizing: border-box;
 }
 
 #app.invert {
