@@ -246,6 +246,8 @@ export default {
 
           if (this.curLevel === maps.length - 1 && (!this.doBothSubLevels || this.curSubLevel === maps[this.curLevel].length - 1)) {
             this.won = true;
+            // Stop timer when you win the game
+            clearInterval(this.timerInterval);
             this.curLevel = 1;
           } else {
             if (this.doBothSubLevels) {
